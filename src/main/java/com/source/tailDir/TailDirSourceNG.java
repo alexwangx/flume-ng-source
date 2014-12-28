@@ -65,7 +65,7 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
 
         logger.debug("in configure , monitorDirPath value is :{}", monitorDirPath);
         logger.debug("in configure , fileEncode value is :{}", fileEncode);
-        logger.debug("in configure , ignorePattern value is :{}", fileregex);
+        logger.debug("in configure , fileregex value is :{}", fileregex);
         logger.debug("in configure , batchSize value is :{}", batchSize);
 
         if (sourceCounter == null) {
