@@ -46,7 +46,7 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
 
     private String monitorDirPath;
     private String fileEncode;
-    private String fileregex;
+    private String fileRegex;
     private int batchSize;
     private boolean startFromEnd;
 
@@ -58,14 +58,14 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
 
         this.monitorDirPath = context.getString("monitorPath");
         this.fileEncode = context.getString("fileEncode", "UTF-8");
-        this.fileregex = context.getString("fileregex", ".*");
+        this.fileRegex = context.getString("fileRegex", ".*");
         this.batchSize = context.getInteger("batchSize", 20);
         this.startFromEnd = context.getBoolean("startFromEnd", true);
         Preconditions.checkNotNull(monitorDirPath == null, "Monitoring directory path is null!!!");
 
         logger.debug("in configure , monitorDirPath value is :{}", monitorDirPath);
         logger.debug("in configure , fileEncode value is :{}", fileEncode);
-        logger.debug("in configure , fileregex value is :{}", fileregex);
+        logger.debug("in configure , fileRegex value is :{}", fileRegex);
         logger.debug("in configure , batchSize value is :{}", batchSize);
 
         if (sourceCounter == null) {
@@ -79,10 +79,10 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
     public void start() {
         Preconditions.checkState(watcher == null,
                 "Attempting to open an already open TailDirSource (" + monitorDirPath + ", \""
-                        + fileregex + "\")");
+                        + fileRegex + "\")");
         // 100 ms between checks
         this.tail = new TailSource(100);
-        watcher = createWatcher(new File(monitorDirPath), fileregex, this, sourceCounter);
+        watcher = createWatcher(new File(monitorDirPath), fileRegex, this, sourceCounter);
         dirChecked = true;
         watcher.start();
         tail.open();
