@@ -59,7 +59,7 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
         this.monitorDirPath = context.getString("monitorPath");
         this.fileEncode = context.getString("fileEncode", "UTF-8");
         this.fileRegex = context.getString("fileRegex", ".*");
-        this.batchSize = context.getInteger("batchSize", 20);
+        this.batchSize = context.getInteger("batchSize", 100);
         this.startFromEnd = context.getBoolean("startFromEnd", true);
         Preconditions.checkNotNull(monitorDirPath == null, "Monitoring directory path is null!!!");
 
