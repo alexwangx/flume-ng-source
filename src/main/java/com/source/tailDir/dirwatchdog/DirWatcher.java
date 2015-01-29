@@ -120,6 +120,7 @@ public class DirWatcher {
      * and fires events based on changes.
      */
     public void check() {
+        // TODO file filter
         File[] files = dir.listFiles(filter);
         if (files == null) { // directory is no longer present
             LOG.info("dir " + dir.getAbsolutePath() + " does not exist!");
