@@ -1,9 +1,9 @@
 flume-ng-source
 ================
 
-Source of Flume NG for tailing files in a directory
+Source of Flume NG
 
-Configuration
+Configuration -- tailDir
 =============
 | Property Name | Default   | Description         |
 | ------------- | :-----:   | :----------         |
@@ -20,5 +20,24 @@ Configuration
 agent.sources = tailDir
 agent.sources.tailDir.type = com.source.tailDir.TailDirSourceNG
 agent.sources.tailDir.monitorPath = /Users/alex/Downloads/testDir/test
+```
 
+Configuration -- tailFile
+=============
+    tail a file on unix(HP-UX,AIX...) platform, replacing tail -F command
+| Property Name | Default   | Description         |
+| ------------- | :-----:   | :----------         |
+| Channels      |    -      |                     |
+| Type          |    -      |                     |
+| monitorFile   |    -      | Monitoring file path        |
+| fileEncode    | UTF-8     | Monitoring file encoding    |
+| batchSize     |   100     | The max number of lines to read and send to the channel at a time |
+| startFromEnd  |   true    | If startFromEnd is set true, begin reading the file at the end|
+
+* Example
+```
+#tail a file on unix(HP-UX,AIX...) platform, replacing tail -F command
+agent.sources = tailFile
+agent.sources.tailDir.type = com.source.tailDir.TailSourceNG
+agent.sources.tailDir.monitorFile = /Users/alex/Downloads/testFile/test.txt
 ```
