@@ -76,15 +76,16 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
             // to true
             c = new Cursor(this, sourceCounter, f, f.length(), f.length(), f
                     .lastModified(), fileEncode, batchSize);
-            try {
-                c.initCursorPos();
-            } catch (InterruptedException e) {
-                logger.error("Initializing of cursor failed", e);
-                c.close();
-                return;
-            }
         } else {
             c = new Cursor(this, sourceCounter, f, fileEncode, batchSize);
+        }
+
+        try {
+            c.initCursorPos();
+        } catch (InterruptedException e) {
+            logger.error("Initializing of cursor failed", e);
+            c.close();
+            return;
         }
         tail.addCursor(c);
         tail.open();
