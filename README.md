@@ -15,7 +15,7 @@ Configuration -- tailDir
 | batchSize     |   100     | The max number of lines to read and send to the channel at a time |
 | startFromEnd  |   true    | If startFromEnd is set true, begin reading the file at the end|
 | delimRegex    |   null    | delimiter regex|
-| delimMode     |   null    | delimMode="exclude|prev|next" |
+| delimMode     |   null    | delimMode="exclude;prev;next" |
 
 * Example
 ```
@@ -36,7 +36,7 @@ Configuration -- tailFile
 | batchSize     |   100     | The max number of lines to read and send to the channel at a time |
 | startFromEnd  |   true    | If startFromEnd is set true, begin reading the file at the end|
 | delimRegex    |   null    | delimiter regex|
-| delimMode     |   null    | delimMode="exclude|prev|next" |
+| delimMode     |   null    | delimMode="exclude;prev;next" |
 
 * Example
 ```
