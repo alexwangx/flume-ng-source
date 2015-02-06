@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TailDirSourceNGTest {
-    private TailDirSourceNG source;
+public class TailSourceNGTest {
+    private TailSourceNG source;
     private Context context;
     static MemoryChannel channel;
     private File tmpDir;
@@ -27,15 +27,12 @@ public class TailDirSourceNGTest {
     @Before
     public void setUp() throws InterruptedException {
         tmpDir = Files.createTempDir();
-        source = new TailDirSourceNG();
+        source = new TailSourceNG();
         channel = new MemoryChannel();
         context = new Context();
 
-        context.put("monitorPath", tmpDir.getAbsolutePath());
         context.put("fileEncode", "GBK");
         context.put("batchSize", "8");
-//        context.put("fileregex", "group-[^\\\\.]*");
-        context.put("fileregex", ".*");
         context.put("startFromEnd", "false");
 
         Configurables.configure(channel, context);
@@ -62,6 +59,8 @@ public class TailDirSourceNGTest {
     public void testProcess() throws InterruptedException, LifecycleException,
             EventDeliveryException, IOException {
         File f1 = new File(tmpDir.getAbsolutePath() + "/file1");
+        context.put("monitorFile", f1.getAbsolutePath());
+
         Files.write("file1line1\nfile1line2\nfile1line3\nfile1line4\n" +
                         "file1line5\nfile1line6\nfile1line7\nfile1line8\n",
                 f1, Charsets.UTF_8);
@@ -83,6 +82,7 @@ public class TailDirSourceNGTest {
     public void testCustomDelimProcess() throws InterruptedException, LifecycleException,
             EventDeliveryException, IOException {
         File f1 = new File(tmpDir.getAbsolutePath() + "/file2");
+        context.put("monitorFile", f1.getAbsolutePath());
 
         context.put("delimRegex", "</Document>");
         context.put("delimMode", "prev");
@@ -103,7 +103,7 @@ public class TailDirSourceNGTest {
                     "        <MsgTp>ibps.309.001.01</MsgTp>\n" +
                     "        <MsgId>00000000000000667781</MsgId>\n" +
                     "        <MsgRefId>00000000000000667781</MsgRefId>\n" +
-                    "        <MsgProCd>0000"+i+"</MsgProCd>\n" +
+                    "        <MsgProCd>0000" + i + "</MsgProCd>\n" +
                     "    </ComuCnfm>\n" +
                     "</Document>" +
                     "\n\n\n";

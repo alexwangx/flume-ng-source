@@ -14,6 +14,8 @@ Configuration -- tailDir
 | fileRegex     |   .*      | Regular expression specifying which files to slected,Note:Escape character |
 | batchSize     |   100     | The max number of lines to read and send to the channel at a time |
 | startFromEnd  |   true    | If startFromEnd is set true, begin reading the file at the end|
+| delimRegex    |   null    | delimiter regex|
+| delimMode     |   null    | delimMode="exclude|prev|next" |
 
 * Example
 ```
@@ -30,9 +32,11 @@ Configuration -- tailFile
 | Channels      |    -      |                     |
 | Type          |    -      |                     |
 | monitorFile   |    -      | Monitoring file path        |
-| fileEncode    | UTF-8     | Monitoring file encoding    |
+| fileEncode    |  UTF-8    | Monitoring file encoding    |
 | batchSize     |   100     | The max number of lines to read and send to the channel at a time |
 | startFromEnd  |   true    | If startFromEnd is set true, begin reading the file at the end|
+| delimRegex    |   null    | delimiter regex|
+| delimMode     |   null    | delimMode="exclude|prev|next" |
 
 * Example
 ```

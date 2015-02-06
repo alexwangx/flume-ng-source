@@ -17,7 +17,6 @@
  */
 package com.source.tailDir;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.apache.flume.Context;
 import org.apache.flume.EventDrivenSource;
@@ -31,7 +30,6 @@ import java.io.File;
 
 /**
  * tail a file on unix platform, replacing tail -F command
- *
  */
 public class TailSourceNG extends AbstractSource implements Configurable, EventDrivenSource {
     public static final Logger logger = LoggerFactory.getLogger(TailSourceNG.class);
@@ -43,19 +41,19 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
 
     public SourceCounter sourceCounter;
 
+    private String delimRegex;
+    private String delimMode;
 
     @Override
     public void configure(Context context) {
-
         this.monitorFile = context.getString("monitorFile");
         this.fileEncode = context.getString("fileEncode", "UTF-8");
         this.batchSize = context.getInteger("batchSize", 100);
         this.startFromEnd = context.getBoolean("startFromEnd", true);
-        Preconditions.checkNotNull(monitorFile == null, "Monitoring file is null!!!");
+        this.delimRegex = context.getString("delimRegex", null);
+        this.delimMode = context.getString("delimMode", null);
 
-        logger.debug("in configure , monitorFile value is :{}", monitorFile);
-        logger.debug("in configure , fileEncode value is :{}", fileEncode);
-        logger.debug("in configure , batchSize value is :{}", batchSize);
+        Preconditions.checkNotNull(monitorFile == null, "Monitoring file is null!!!");
 
         if (sourceCounter == null) {
             sourceCounter = new SourceCounter(getName());
@@ -71,22 +69,33 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
         this.tail = new TailSource(100);
         // Add a new file to the multi tail.
         Cursor c;
-        if (startFromEnd) {
-            // init cursor positions on first dir check when startFromEnd is set
-            // to true
-            c = new Cursor(this, sourceCounter, f, f.length(), f.length(), f
-                    .lastModified(), fileEncode, batchSize);
+        if (delimRegex == null) {
+            if (startFromEnd) {
+                // init cursor positions on first dir check when startFromEnd is set
+                // to true
+                c = new Cursor(this, sourceCounter, f, f.length(), f.length(), f
+                        .lastModified(), fileEncode, batchSize);
+            } else {
+                c = new Cursor(this, sourceCounter, f, fileEncode, batchSize);
+            }
         } else {
-            c = new Cursor(this, sourceCounter, f, fileEncode, batchSize);
+            if (startFromEnd) {
+                // init cursor positions on first dir check when startFromEnd is set
+                // to true
+                c = new CustomDelimCursor(this, sourceCounter, f, fileEncode, batchSize, f.length(), f.length(), f.lastModified(), delimRegex, delimMode);
+            } else {
+                c = new CustomDelimCursor(this, sourceCounter, f, fileEncode, batchSize, delimRegex, delimMode);
+            }
         }
 
         try {
             c.initCursorPos();
         } catch (InterruptedException e) {
-            logger.error("Initializing of cursor failed", e);
+            logger.error("Initializing of custom delimiter cursor failed", e);
             c.close();
             return;
         }
+
         tail.addCursor(c);
         tail.open();
         super.start();
@@ -103,8 +112,4 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
         logger.info("TailDir source stopped");
     }
 
-    @VisibleForTesting
-    public SourceCounter getSourceCounter() {
-        return sourceCounter;
-    }
 }

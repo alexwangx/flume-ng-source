@@ -17,11 +17,10 @@
  */
 package com.source.tailDir;
 
+import com.google.common.base.Preconditions;
 import com.source.tailDir.dirwatchdog.DirChangeHandler;
 import com.source.tailDir.dirwatchdog.DirWatcher;
 import com.source.tailDir.dirwatchdog.RegexFileFilter;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import org.apache.flume.Context;
 import org.apache.flume.EventDrivenSource;
 import org.apache.flume.conf.Configurable;
@@ -52,6 +51,8 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
 
     public SourceCounter sourceCounter;
 
+    private String delimRegex;
+    private String delimMode;
 
     @Override
     public void configure(Context context) {
@@ -61,19 +62,15 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
         this.fileRegex = context.getString("fileRegex", ".*");
         this.batchSize = context.getInteger("batchSize", 100);
         this.startFromEnd = context.getBoolean("startFromEnd", true);
+        this.delimRegex = context.getString("delimRegex", null);
+        this.delimMode = context.getString("delimMode", null);
+
         Preconditions.checkNotNull(monitorDirPath == null, "Monitoring directory path is null!!!");
-
-        logger.debug("in configure , monitorDirPath value is :{}", monitorDirPath);
-        logger.debug("in configure , fileEncode value is :{}", fileEncode);
-        logger.debug("in configure , fileRegex value is :{}", fileRegex);
-        logger.debug("in configure , batchSize value is :{}", batchSize);
-
         if (sourceCounter == null) {
             sourceCounter = new SourceCounter(getName());
         }
 
     }
-
 
     @Override
     public void start() {
@@ -117,20 +114,32 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
                 // Add a new file to the multi tail.
                 logger.info("added file " + f);
                 Cursor c;
-                if (startFromEnd && !dirChecked) {
-                    // init cursor positions on first dir check when startFromEnd is set
-                    // to true
-                    c = new Cursor(source, sourceCounter, f, f.length(), f.length(), f
-                            .lastModified(), fileEncode, batchSize);
-                    try {
-                        c.initCursorPos();
-                    } catch (InterruptedException e) {
-                        logger.error("Initializing of cursor failed", e);
-                        c.close();
-                        return;
+                if (delimRegex == null) {
+                    if (startFromEnd && !dirChecked) {
+                        // init cursor positions on first dir check when startFromEnd is set
+                        // to true
+                        c = new Cursor(source, sourceCounter, f, f.length(), f.length(), f
+                                .lastModified(), fileEncode, batchSize);
+                    } else {
+                        c = new Cursor(source, sourceCounter, f, fileEncode, batchSize);
                     }
                 } else {
-                    c = new Cursor(source, sourceCounter, f, fileEncode, batchSize);
+                    // special delimiter modes
+                    if (startFromEnd && !dirChecked) {
+                        // init cursor positions on first dir check when startFromEnd is set
+                        // to true
+                        c = new CustomDelimCursor(source, sourceCounter, f, fileEncode, batchSize, f.length(), f.length(), f.lastModified(), delimRegex, delimMode);
+                    } else {
+                        c = new CustomDelimCursor(source, sourceCounter, f, fileEncode, batchSize, delimRegex, delimMode);
+                    }
+                }
+
+                try {
+                    c.initCursorPos();
+                } catch (InterruptedException e) {
+                    logger.error("Initializing of cursor failed", e);
+                    c.close();
+                    return;
                 }
                 curmap.put(f.getPath(), c);
                 tail.addCursor(c);
@@ -157,10 +166,5 @@ public class TailDirSourceNG extends AbstractSource implements Configurable, Eve
             watcher.check();
         }
         return watcher;
-    }
-
-    @VisibleForTesting
-    public SourceCounter getSourceCounter() {
-        return sourceCounter;
     }
 }

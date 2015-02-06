@@ -241,11 +241,8 @@ public class Cursor {
                 buf.get(); // read '\n'
                 buf.mark(); // new mark.
                 start = buf.position();
-                try {
-                    logger.debug("line info >>>>>>>>>" + new String(body, charEncode));
-                } catch (UnsupportedEncodingException e) {
-                    logger.error("UnsupportedEncodingException! {}" + e.getMessage(), e);
-                }
+                logger.debug("line info >>>>>>>>>" + new String(body, charEncode));
+
                 synchronized (eventList) {
                     sourceCounter.incrementEventReceivedCount();
                     eventList.add(EventBuilder.withBody(new String(body, charEncode).getBytes()));
@@ -269,15 +266,17 @@ public class Cursor {
         return madeProgress;
     }
 
-    private void flushEventBatch(List<Event> eventList) {
-        logger.debug("process event batch size {}", eventList.size());
+    void flushEventBatch(List<Event> eventList) {
+        sourceCounter.addToEventReceivedCount(eventList.size());
+        sourceCounter.incrementAppendBatchReceivedCount();
+
         source.getChannelProcessor().processEventBatch(eventList);
-        sourceCounter.addToEventAcceptedCount(eventList.size());
+
         eventList.clear();
         lastPushToChannel = systemClock.currentTimeMillis();
     }
 
-    private boolean timeout() {
+    boolean timeout() {
         return (systemClock.currentTimeMillis() - lastPushToChannel) >= 3000;
     }
 
