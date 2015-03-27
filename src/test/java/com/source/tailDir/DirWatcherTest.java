@@ -1,15 +1,12 @@
 package com.source.tailDir;
 
+import java.io.File;
+
 import com.source.tailDir.dirwatchdog.DirChangeHandler;
 import com.source.tailDir.dirwatchdog.DirWatcher;
 import com.source.tailDir.dirwatchdog.RegexFileFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 public class DirWatcherTest {
-    private static final Logger LOG = LoggerFactory.getLogger(DirWatcherTest.class);
 
     private DirWatcher watcher;
 
