@@ -65,18 +65,18 @@ public class Cursor {
     String charEncode;
 
     AbstractSource source;
-    SourceCounter sourceCounter;
+    SourceCounter counter;
     int batchSize;
 
 
-    public Cursor(AbstractSource source, SourceCounter sourceCounter, File f, String charEncode, int batchSize) {
-        this(source, sourceCounter, f, 0, 0, 0, charEncode, batchSize);
+    public Cursor(AbstractSource source, SourceCounter counter, File f, String charEncode, int batchSize) {
+        this(source, counter, f, 0, 0, 0, charEncode, batchSize);
     }
 
-    Cursor(AbstractSource source, SourceCounter sourceCounter, File f, long lastReadOffset,
+    Cursor(AbstractSource source, SourceCounter counter, File f, long lastReadOffset,
            long lastFileLen, long lastMod, String charEncode, int batchSize) {
         this.source = source;
-        this.sourceCounter = sourceCounter;
+        this.counter = counter;
         this.batchSize = batchSize;
         this.file = f;
         this.lastChannelPos = lastReadOffset;
@@ -127,12 +127,10 @@ public class Cursor {
 
             try {
                 logger.debug("flush method line info >>>>> " + new String(body, charEncode));
-
-
-                sourceCounter.incrementAppendBatchReceivedCount();
+                counter.incrementEventReceivedCount();
                 Event event = EventBuilder.withBody(new String(body, charEncode).getBytes());
                 source.getChannelProcessor().processEvent(event);
-                sourceCounter.incrementAppendBatchAcceptedCount();
+                counter.incrementAppendAcceptedCount();
             } catch (UnsupportedEncodingException e) {
                 logger.error("UnsupportedEncodingException! " + e.getMessage(), e);
             }
@@ -244,7 +242,6 @@ public class Cursor {
                 logger.debug("line info >>>>>>>>>" + new String(body, charEncode));
 
                 synchronized (eventList) {
-                    sourceCounter.incrementEventReceivedCount();
                     eventList.add(EventBuilder.withBody(new String(body, charEncode).getBytes()));
                     if (eventList.size() >= batchSize || timeout()) {
                         flushEventBatch(eventList);
@@ -267,11 +264,9 @@ public class Cursor {
     }
 
     void flushEventBatch(List<Event> eventList) {
-        sourceCounter.addToEventReceivedCount(eventList.size());
-        sourceCounter.incrementAppendBatchReceivedCount();
-
+        counter.addToEventReceivedCount(eventList.size());
         source.getChannelProcessor().processEventBatch(eventList);
-
+        counter.addToEventAcceptedCount(eventList.size());
         eventList.clear();
         lastPushToChannel = systemClock.currentTimeMillis();
     }

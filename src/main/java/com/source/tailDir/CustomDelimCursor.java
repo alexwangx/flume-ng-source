@@ -48,14 +48,14 @@ public class CustomDelimCursor extends Cursor {
         INCLUDE_PREV, EXCLUDE, INCLUDE_NEXT
     }
 
-    CustomDelimCursor(AbstractSource source, SourceCounter sourceCounter, File f, String charEncode, int batchSize, long lastReadOffset, long lastFileLen, long lastMod, String regex, String delimModeStr) {
-        super(source, sourceCounter, f, lastReadOffset, lastFileLen, lastMod, charEncode, batchSize);
+    CustomDelimCursor(AbstractSource source, SourceCounter counter, File f, String charEncode, int batchSize, long lastReadOffset, long lastFileLen, long lastMod, String regex, String delimModeStr) {
+        super(source, counter, f, lastReadOffset, lastFileLen, lastMod, charEncode, batchSize);
         this.pat = Pattern.compile(regex);
         this.delimMode = extractDelim(delimModeStr);
     }
 
-    CustomDelimCursor(AbstractSource source, SourceCounter sourceCounter, File f, String charEncode, int batchSize, String regex, String delimModeStr) {
-        super(source, sourceCounter, f, charEncode, batchSize);
+    CustomDelimCursor(AbstractSource source, SourceCounter counter, File f, String charEncode, int batchSize, String regex, String delimModeStr) {
+        super(source, counter, f, charEncode, batchSize);
         this.pat = Pattern.compile(regex);
         this.delimMode = extractDelim(delimModeStr);
     }
@@ -173,22 +173,13 @@ public class CustomDelimCursor extends Cursor {
             }
 
             if (prefix != null) {
-                byte[] body2 = new byte[prefix.length + body.length];
-                int i = 0;
-                for (; i < prefix.length; i++) {
-                    body2[i] = prefix[i];
-                }
-                for (int j = 0; j < body.length; j++, i++) {
-                    body2[i] = body[j];
-                }
-                body = body2;
+                body = byteMerger(prefix, body);
             }
             prefix = nextPrefix;
             nextPrefix = null;
 
             logger.debug("line info >>>>>>>>>" + new String(body, charEncode));
             synchronized (eventList) {
-                sourceCounter.incrementEventReceivedCount();
                 eventList.add(EventBuilder.withBody(new String(body, charEncode).getBytes()));
                 if (eventList.size() >= batchSize || timeout()) {
                     flushEventBatch(eventList);
@@ -210,6 +201,7 @@ public class CustomDelimCursor extends Cursor {
         buf.compact(); // shift leftovers to front.
         return madeProgress;
     }
+
 
     /**
      * Flush any buffering the cursor has done. If the buffer does not end with
@@ -238,29 +230,28 @@ public class CustomDelimCursor extends Cursor {
 
             // include prefix if present.
             if (prefix != null) {
-                byte[] body2 = new byte[prefix.length + body.length];
-                int i = 0;
-                for (; i < prefix.length; i++) {
-                    body2[i] = prefix[i];
-                }
-                for (int j = 0; j < body.length; j++, i++) {
-                    body2[i] = body[j];
-                }
-                body = body2;
+                body = byteMerger(prefix, body);
             }
 
             try {
                 logger.debug("flush method line info >>>>> " + new String(body, charEncode));
-                sourceCounter.incrementAppendBatchReceivedCount();
+                counter.incrementEventReceivedCount();
                 Event event = EventBuilder.withBody(new String(body, charEncode).getBytes());
                 source.getChannelProcessor().processEvent(event);
-                sourceCounter.incrementAppendBatchAcceptedCount();
+                counter.incrementEventAcceptedCount();
             } catch (UnsupportedEncodingException e) {
                 logger.error("UnsupportedEncodingException! " + e.getMessage(), e);
             }
         }
         in = null;
         buf.clear();
+    }
+
+    byte[] byteMerger(byte[] byte1, byte[] byte2){
+        byte[] byte3 = new byte[byte1.length+byte1.length];
+        System.arraycopy(byte1, 0, byte3, 0, byte1.length);
+        System.arraycopy(byte2, 0, byte3, byte1.length, byte2.length);
+        return byte3;
     }
 
 

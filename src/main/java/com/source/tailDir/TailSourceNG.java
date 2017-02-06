@@ -39,7 +39,7 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
     private int batchSize;
     private boolean startFromEnd;
 
-    public SourceCounter sourceCounter;
+    private SourceCounter counter;
 
     private String delimRegex;
     private String delimMode;
@@ -55,8 +55,8 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
 
         Preconditions.checkNotNull(monitorFile == null, "Monitoring file is null!!!");
 
-        if (sourceCounter == null) {
-            sourceCounter = new SourceCounter(getName());
+        if (counter == null) {
+            counter = new SourceCounter(getName());
         }
 
     }
@@ -64,6 +64,7 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
 
     @Override
     public void start() {
+        logger.info("Starting {}...", this);
         File f = new File(monitorFile);
         // 100 ms between checks
         this.tail = new TailSource(100);
@@ -73,18 +74,18 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
             if (startFromEnd) {
                 // init cursor positions on first dir check when startFromEnd is set
                 // to true
-                c = new Cursor(this, sourceCounter, f, f.length(), f.length(), f
+                c = new Cursor(this, counter, f, f.length(), f.length(), f
                         .lastModified(), fileEncode, batchSize);
             } else {
-                c = new Cursor(this, sourceCounter, f, fileEncode, batchSize);
+                c = new Cursor(this, counter, f, fileEncode, batchSize);
             }
         } else {
             if (startFromEnd) {
                 // init cursor positions on first dir check when startFromEnd is set
                 // to true
-                c = new CustomDelimCursor(this, sourceCounter, f, fileEncode, batchSize, f.length(), f.length(), f.lastModified(), delimRegex, delimMode);
+                c = new CustomDelimCursor(this, counter, f, fileEncode, batchSize, f.length(), f.length(), f.lastModified(), delimRegex, delimMode);
             } else {
-                c = new CustomDelimCursor(this, sourceCounter, f, fileEncode, batchSize, delimRegex, delimMode);
+                c = new CustomDelimCursor(this, counter, f, fileEncode, batchSize, delimRegex, delimMode);
             }
         }
 
@@ -99,7 +100,7 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
         tail.addCursor(c);
         tail.open();
         super.start();
-        sourceCounter.start();
+        counter.start();
         logger.info("TailDir source started");
     }
 
@@ -107,7 +108,7 @@ public class TailSourceNG extends AbstractSource implements Configurable, EventD
     @Override
     public void stop() {
         tail.close();
-        sourceCounter.stop();
+        counter.stop();
         super.stop();
         logger.info("TailDir source stopped");
     }

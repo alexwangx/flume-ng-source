@@ -67,7 +67,7 @@ import java.util.List;
  * java api to get these, or Java 7's WatchService file watcher API.
  */
 public class TailSource {
-    private static final Logger LOG = LoggerFactory.getLogger(TailSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(TailSource.class);
 
     private static int thdCount = 0;
     private volatile boolean done = false;
@@ -121,7 +121,7 @@ public class TailSource {
 
                     boolean madeProgress = false;
                     for (Cursor c : cursors) {
-                        LOG.debug("Progress loop: " + c.file);
+                        logger.debug("Progress loop: " + c.file);
                         if (c.tailBody()) {
                             madeProgress = true;
                         }
@@ -131,11 +131,11 @@ public class TailSource {
                         Thread.sleep(sleepTime);
                     }
                 }
-                LOG.debug("Tail got done flag");
+                logger.debug("Tail got done flag");
             } catch (InterruptedException e) {
-                LOG.error("Tail thread nterrupted: " + e.getMessage(), e);
+                logger.error("Tail thread nterrupted: " + e.getMessage(), e);
             } finally {
-                LOG.info("TailThread has exited");
+                logger.info("TailThread has exited");
             }
 
         }
@@ -149,13 +149,13 @@ public class TailSource {
 
         if (thd == null) {
             cursors.add(cursor);
-            LOG.debug("Unstarted Tail has added cursor: " + cursor.file.getName());
+            logger.debug("Unstarted Tail has added cursor: " + cursor.file.getName());
 
         } else {
             synchronized (newCursors) {
                 newCursors.add(cursor);
             }
-            LOG.debug("Tail added new cursor to new cursor list: "
+            logger.debug("Tail added new cursor to new cursor list: "
                     + cursor.file.getName());
         }
 
@@ -181,7 +181,7 @@ public class TailSource {
         synchronized (this) {
             done = true;
             if (thd == null) {
-                LOG.warn("TailSource double closed");
+                logger.warn("TailSource double closed");
                 return;
             }
             try {
@@ -190,7 +190,7 @@ public class TailSource {
                     thd.interrupt();
                 }
             } catch (InterruptedException e) {
-                LOG.error("Tail source Interrupted Exception: " + e.getMessage(), e);
+                logger.error("Tail source Interrupted Exception: " + e.getMessage(), e);
             }
             thd = null;
         }
